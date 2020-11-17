@@ -1,0 +1,69 @@
+trabalho do 4º semestre, de sistemas operacionais.
+
+Sistemas Operacionais - Trabalho Prático
+Escalonador de Processos (baseado no livro texto de SO do William Stallings)
+Seja um sistema operacional multiprogramado que implementa escalonamento de processos com quatro prioridades e considera um número limitado de recursos disponíveis, sendo que quatro desses recursos são CPUs. Neste sistema,  todas as CPUs compartilham a memória principal.
+
+Os seguintes níveis de prioridade, que podem ser definidos, especificam as seguintes características dos processos:
+
+tempo real: de maior prioridade (prioridade 0), são executados de imediato de acordo com a política First Come First Served (FCFS), sendo prioritário a quaisquer outros processos em execução com menor prioridade. Estes processos são executados até a sua  conclusão (não há interrupção ou preempção); e
+de usuário: prioridade normal (prioridades 1, 2, ou 3), são executados de acordo com a política de feedback com três filas de processos prontos. O quantum definido é de 2 unidades de tempo (defina sua unidade de tempo).
+O sistema operacional mantém duas filas de submissão:
+
+fila de processos prontos do tipo tempo-real FTR;
+fila de processos prontos do tipo usuário FU;
+Essas filas são alimentadas a partir de uma fila de entrada única FE de processos submetidos e um agente deve distinguir os processos de entrada e e encaminhar para um das filas citadas acima. A fila de entrada FE é examinada a cada período de tempo (tempo este especificado pelo projetista do sistema operacional).
+
+A fila FTR deve estar vazia para que o escalonador feedback seja ativado, quer dizer, enquanto existir processos do tempo real prontos, esses serão escalonados primeiramente. A implementação da política feedback baseada no conceito básico apresentado em aula.
+
+
+Recursos disponíveis além das CPUs
+O sistema possui os seguintes recursos:
+
+duas impressoras
+um scanner
+um modem
+dois CD drives
+1024 megabytes na memória principal.
+
+Processos de baixa prioridade (de usuários) podem usar qualquer um dos recursos, mas o sistema é notificado de que recursos o processo vai precisar no momento da submissão do processo. O despachante assegura que cada recursos solicitado está apenas disponível para o processo requisitante durante um certo período de tempo (a ser definido pelo projetista).
+
+Processos de tempo real não precisam de nenhum outro recursos a não ser memória principal, que será de no máximo de 64MBytes para cada processo.
+
+
+Alocação de memória
+Um bloco contíguo de memória é alocado para cada processo, durante a sua vida no sistema. Mas repare, os processos em tempo real não devem ficar bloqueados por falta de memória - prioridade é dada para alocar tais processos, pois estes não podem passar tempo em fila esperando por memória.
+
+
+Processos
+Processos no sistema em questão são criados pelo despachante. Esta função cria qualquer processo, de qualquer prioridade e exibe as seguintes mensagens:
+
+uma mensagem que mostra a identificação do processo a ser criado;
+uma mensagem relata quando um processo muda de estado (para suspenso, terminado, ou continua executando).
+ 
+
+Algumas observações importantes:
+Um processo ao ser submetido é inserido na fila FE, com descritor que já contém as suas características principais.
+O processo se torna pronto quando todos os seus recursos necessários estão disponíveis, inclusive memória (prioridade para processos de tempo real).
+Quando um processo é iniciado, o despachante deve apresentar os parâmetros do processo (identificação do processo, prioridade, tempo de processamento restante (em segundos), localização e tamanho do bloco de memória e recursos solicitados).
+Quando um processo é finalizado, os recursos utilizados são devolvidos ao sistema para serem utilizados por outros processos.
+Lista de processos
+A lista de processos especifica os processos a serem executados pelo sistema. A lista deve estar contida em um arquivo de texto que serve como entrada para o seu sistema. Cada linha da lista descreve um processos com os seguintes dados, delimilados por vírgula + espaço:
+
+<arrival time>, <priority>, <processor time>, <Mbytes>, <# impressoras>, <# scanners>, <# modems>, <# CDs>
+
+Por exemplo, o arquivo com:
+
+12, 0, 1, 64, 0, 0, 0, 0
+12, 1, 2, 128, 1, 0, 0, 1 
+13, 3, 6, 128, 1, 0, 1, 2 
+indicaria:
+Processo 1: chegada no momento 12, prioridade 0 (tempo real), duração de 1 segundo de CPU e memória de 64 MBytes, sem necessidade de recursos de E/S
+Processo 2: chegada no momento 12, prioridade 1 (usuário), duração de 2 segundos de CPU e memória de 128 MBytes, requer a impressora e uma unidade de disco.
+Processo 3: chegada no momento 13, prioridade 3 (usuário de baixa prioridade), duração de 6 segundo de CPU e memória de 128 MBytes, uma impressora, um modem e duas unidades de CD.
+
+
+Requisitos do Trabalho Prático:
+O trabalho deve ser implementado em grupos de 2 alunos no máximo. Cada grupo deve definir uma entrada que especifique um conjunto de processos significativo, para que a avaliação das políticas implementadas seja possível. 
+
+Atenção: Threads devem ser definidas para implementar as diferentes políticas, dependendo do tipo de processo (tempo real ou usuário). A interface de seu sistema deve ser tal que seja fácil seguir o que está acontecendo durante um determinado período de tempo.
