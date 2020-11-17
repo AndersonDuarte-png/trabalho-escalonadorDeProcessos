@@ -177,6 +177,8 @@ int main(){
     printf("lista de processo Tempo real:\n");
     exibirFila(&ProcessosTempoReal); 
 
+    int a;
+
     return 0;
 }
 
