@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<time.h>
 
 typedef struct aux {
     char id;
@@ -101,6 +102,8 @@ componentesProcessos * retirarFila(fila * q){
 
 void entradaDeProcesso(fila *queueEntradaProcessos ){
 
+
+
     FILE *processo;
     processo = fopen("lista-de-processos.txt", "r");
     
@@ -113,19 +116,25 @@ void entradaDeProcesso(fila *queueEntradaProcessos ){
         componentesProcessos a1;
         
 
-        while(fscanf(processo, "%d %c  %d  %c %d %c %d %c %d %c %d %c %d %c %d",&a1.arrival_time, &residuos[0], &a1.priority, &residuos[1], &a1.processor_time, &residuos[2],&a1.Mbytes, &residuos[3], &a1.impressoras,  &residuos[4], &a1.scanners, &residuos[5], &a1.modems,  &residuos[6], &a1.cds)!=EOF){
+        //while(1){
 
-            componentesProcessos *newProcesso;
-            newProcesso = criarElementoFila(a, a1.arrival_time, a1.priority, a1.processor_time, a1.Mbytes, a1.impressoras, a1.scanners, a1.modems, a1.cds);
-            a++;
+            clock_t start, end;
 
-            inserirFila(queueEntradaProcessos, newProcesso );
-        }
+            while(fscanf(processo, "%d %c  %d  %c %d %c %d %c %d %c %d %c %d %c %d",&a1.arrival_time, &residuos[0], &a1.priority, &residuos[1], &a1.processor_time, &residuos[2],&a1.Mbytes, &residuos[3], &a1.impressoras,  &residuos[4], &a1.scanners, &residuos[5], &a1.modems,  &residuos[6], &a1.cds)!=EOF){
 
-        fclose(processo);
+                componentesProcessos *newProcesso;
+                newProcesso = criarElementoFila(a, a1.arrival_time, a1.priority, a1.processor_time, a1.Mbytes, a1.impressoras, a1.scanners, a1.modems, a1.cds);
+                a++;
+
+                inserirFila(queueEntradaProcessos, newProcesso );
+            }
+
+            
+        //}
+         
     }
 
-
+    fclose(processo);
 }
 
 
