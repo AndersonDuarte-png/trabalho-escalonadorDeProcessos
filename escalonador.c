@@ -21,9 +21,13 @@ typedef struct {
 } fila;
 
 
-// variavel global
+// variaveis globais
 
 int a =0;
+
+int memoriaPrincipal = 1024;
+
+int quantum = 128;
 
 //
 
@@ -39,6 +43,10 @@ void inserirFila(fila *fila, componentesProcessos *novo);
 void entradaDeProcesso();
 
 void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, fila *ProcessosUsuario);
+
+void memoria_principal(fila *ProcessosTempoReal, fila *ProcessosUsuario);
+
+void politicafeedback(fila *feedbackQ0, int memoriaP);
 
 void exibirFila(fila *fila);
 
@@ -114,26 +122,14 @@ void entradaDeProcesso(fila *queueEntradaProcessos ){
     else{
         char residuos[7];
         componentesProcessos a1;
-        
+        while(fscanf(processo, "%d %c  %d  %c %d %c %d %c %d %c %d %c %d %c %d",&a1.arrival_time, &residuos[0], &a1.priority, &residuos[1], &a1.processor_time, &residuos[2],&a1.Mbytes, &residuos[3], &a1.impressoras,  &residuos[4], &a1.scanners, &residuos[5], &a1.modems,  &residuos[6], &a1.cds)!=EOF){
 
-        //while(1){
-
-            clock_t start, end;
-
-            while(fscanf(processo, "%d %c  %d  %c %d %c %d %c %d %c %d %c %d %c %d",&a1.arrival_time, &residuos[0], &a1.priority, &residuos[1], &a1.processor_time, &residuos[2],&a1.Mbytes, &residuos[3], &a1.impressoras,  &residuos[4], &a1.scanners, &residuos[5], &a1.modems,  &residuos[6], &a1.cds)!=EOF){
-
-                componentesProcessos *newProcesso;
-                newProcesso = criarElementoFila(a, a1.arrival_time, a1.priority, a1.processor_time, a1.Mbytes, a1.impressoras, a1.scanners, a1.modems, a1.cds);
-                a++;
-
-                inserirFila(queueEntradaProcessos, newProcesso );
-            }
-
-            
-        //}
-         
+            componentesProcessos *newProcesso;
+            newProcesso = criarElementoFila(a, a1.arrival_time, a1.priority, a1.processor_time, a1.Mbytes, a1.impressoras, a1.scanners, a1.modems, a1.cds);
+            a++;
+            inserirFila(queueEntradaProcessos, newProcesso );
+        }   
     }
-
     fclose(processo);
 }
 
@@ -159,6 +155,75 @@ void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, f
     
 }
 
+void memoria_principal(fila *ProcessosTempoReal, fila *ProcessosUsuario){
+    
+    politicafeedback(ProcessosUsuario, memoriaPrincipal);
+}
+
+
+
+void politicafeedback(fila *feedbackQ0, int memoriaP){
+    fila feedbackQ1;
+    fila feedbackQ2;
+
+    inicializarFila(&feedbackQ1);
+    inicializarFila(&feedbackQ2);
+
+    componentesProcessos * processo = (componentesProcessos*)malloc(sizeof(componentesProcessos));
+    componentesProcessos *aux1 = (componentesProcessos*)malloc(sizeof(componentesProcessos));
+
+    int aux;
+    int i;
+
+    while( feedbackQ0->inicio != NULL ){
+        processo = feedbackQ0->inicio;
+        
+
+        if(processo->Mbytes != 0){
+            aux = processo->Mbytes*2;
+            for(i =1;i<2;i++){
+                memoriaP -=processo->Mbytes;
+            }
+        }
+        memoriaP+=aux;
+        processo = processo->prox;
+        aux1 = retirarFila(feedbackQ0);
+        inserirFila(&feedbackQ1,aux1);
+    }
+
+    while( feedbackQ1.inicio != NULL ){
+        processo = feedbackQ1.inicio;
+
+
+        if(processo->Mbytes != 0){
+            aux = processo->Mbytes*2;
+            for(i =1;i<2;i++){
+                memoriaP -=processo->Mbytes;
+            }
+        }
+        memoriaP+=aux;
+        processo = processo->prox;
+        aux1 = retirarFila(&feedbackQ1);
+        inserirFila(&feedbackQ2,aux1);
+    }
+
+    while( feedbackQ2.inicio != NULL ){
+        processo = feedbackQ1.inicio;
+
+
+        if(processo->Mbytes != 0){
+            aux = processo->Mbytes*2;
+            for(i =1;i<2;i++){
+                memoriaP -=processo->Mbytes;
+            }
+        }
+        memoriaP+=aux;
+        processo = processo->prox;
+        aux1 = retirarFila(&feedbackQ2);
+        inserirFila(&feedbackQ2,aux1);
+    }
+}
+
 
 int main(){
     fila queueEntradaProcessos;
@@ -174,19 +239,6 @@ int main(){
     inicializarFila(&ProcessosUsuario);
 
     separacaoProcessos(&queueEntradaProcessos,&ProcessosTempoReal,&ProcessosUsuario);
-
-    printf("lista de entrada:\n");
-    exibirFila(&queueEntradaProcessos);
-
-
-   
-    printf("lista de processo usuario:\n");
-    exibirFila(&ProcessosUsuario);
-
-    printf("lista de processo Tempo real:\n");
-    exibirFila(&ProcessosTempoReal); 
-
-
     return 0;
 }
 
