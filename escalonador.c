@@ -20,15 +20,18 @@ typedef struct {
     componentesProcessos* fim;
 } fila;
 
+typedef struct aux1 {
+    int impressora;
+    int scanner;
+    int modem;
+    int CD;
+    int memoriaPrincipal;
+    int quantum;
+} hardware;
+
 
 // variaveis globais
-
 int a =0;
-
-int memoriaPrincipal = 1024;
-
-int quantum = 128;
-
 //
 
 
@@ -40,20 +43,38 @@ componentesProcessos *criarElementoFila( int id1, int arrival_time1, int priorit
 
 void inserirFila(fila *fila, componentesProcessos *novo);
 
+componentesProcessos * retirarFila(fila * q);
+
+void trocarElementoFila(fila* a1, fila *a2);
+
 void entradaDeProcesso();
 
 void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, fila *ProcessosUsuario);
 
-void memoria_principal(fila *ProcessosTempoReal, fila *ProcessosUsuario);
+void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario);
 
-void politicafeedback(fila *feedbackQ0);
+hardware * Sistema();
+
+void politicafeedback(fila *feedbackQ0, hardware * sistema);
 
 void exibirFila(fila *fila);
 
-componentesProcessos * retirarFila(fila * q);
+
+
+
 // fim das funções e suas explicações
 
+hardware * Sistema(){
+    hardware * a1 = (hardware*)malloc(sizeof(hardware));
+    a1->CD =2;
+    a1->impressora =2;
+    a1->memoriaPrincipal = 1024;
+    a1->modem =1;
+    a1->scanner =1;
+    a1->quantum =2;
 
+    return a1;
+}
 
 void inicializarFila(fila *fila){
     fila->fim = NULL;
@@ -107,6 +128,11 @@ componentesProcessos * retirarFila(fila * q){
 
 }
 
+void trocarElementoFila(fila* a1, fila *a2){
+  componentesProcessos * elemento = retirarFila(a1);
+  inserirFila(a2, elemento);
+}
+
 
 void entradaDeProcesso(fila *queueEntradaProcessos ){
 
@@ -152,105 +178,83 @@ void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, f
             inserirFila(ProcessosUsuario, aux);
         } 
     }
-
-    memoria_principal(ProcessosTempoReal,ProcessosUsuario);
-}
-
-void memoria_principal(fila *ProcessosTempoReal, fila *ProcessosUsuario){
     
-   politicafeedback(ProcessosUsuario);
+    politicasProcessos(ProcessosTempoReal,ProcessosUsuario);
+}
+
+void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario){
+    
+   hardware *sistema = Sistema();
+   politicafeedback(ProcessosUsuario, sistema);
 }
 
 
 
-void politicafeedback(fila *feedbackQ0){
+void politicafeedback(fila *feedbackQ0, hardware * sistema){
+    
     fila feedbackQ1;
     fila feedbackQ2;
 
     inicializarFila(&feedbackQ1);
     inicializarFila(&feedbackQ2);
 
-    componentesProcessos * processo = (componentesProcessos*)malloc(sizeof(componentesProcessos));
-    componentesProcessos *aux1 = (componentesProcessos*)malloc(sizeof(componentesProcessos));
-    
+    componentesProcessos * processo;
 
-    int aux;
-    int i;
+    int i =0;
 
-    exibirFila(feedbackQ0);
-    processo = feedbackQ0->inicio;
+    while( feedbackQ0->inicio != NULL && feedbackQ1.inicio != NULL && feedbackQ2.inicio != NULL   ){
+        if(feedbackQ0->inicio!= NULL ){
+            processo = feedbackQ0->inicio;
 
-    while( feedbackQ0->inicio != NULL ){
-        
-        printf("#####\n");
-
-        if(processo->Mbytes != 0){
-            aux = processo->Mbytes*2;
-            for(i =1;i<2;i++){
-                memoriaPrincipal -=processo->Mbytes;
-                processo->Mbytes -= quantum;
+            if(processo->Mbytes*2 <= sistema->memoriaPrincipal && processo->cds <= sistema->CD && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner ){
+                sistema->memoriaPrincipal -= processo->Mbytes;
+                sistema->memoriaPrincipal -= processo->Mbytes;
             }
+            sistema = Sistema(); // reset nas variaves de sistema
+            if(processo->Mbytes != 0){
+                trocarElementoFila(feedbackQ0, &feedbackQ1);
+            }
+            else{
+                printf("processo de id: terminado\n", processo->id);
+                free(processo);  
+            } 
         }
-        else{
-            aux1 = processo;
-            processo = processo->prox;
-            free(aux1);
+
+        if(feedbackQ1.inicio!= NULL ){
+            processo = feedbackQ1.inicio;
+
+            if(processo->Mbytes*2 <= sistema->memoriaPrincipal && processo->cds <= sistema->CD && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner){
+                sistema->memoriaPrincipal -= processo->Mbytes;
+                sistema->memoriaPrincipal -= processo->Mbytes;
+              }
+             sistema = Sistema(); // reset nas variaves de sistema
+             if(processo->Mbytes != 0){
+                trocarElementoFila(feedbackQ0, &feedbackQ1);
+            }
+            else{
+                 printf("processo de id: terminado\n", processo->id);
+                 free(processo);  
+            }   
         }
-        memoriaPrincipal+=aux;
-        processo = processo->prox; 
+
+        if(feedbackQ2.inicio!= NULL ){
+            processo = feedbackQ1.inicio;
+
+            if(processo->Mbytes*2 <= sistema->memoriaPrincipal && processo->cds <= sistema->CD && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner){
+                sistema->memoriaPrincipal -= processo->Mbytes;
+                sistema->memoriaPrincipal -= processo->Mbytes;
+              }
+             sistema = Sistema(); // reset nas variaves de sistema
+             if(processo->Mbytes != 0){
+                trocarElementoFila(&feedbackQ2, &feedbackQ2);
+            }
+            else{
+                 printf("processo de id: terminado\n", processo->id);
+                 free(processo);  
+            }   
+        } 
     }
-
-    exibirFila(&feedbackQ1);
-
-    /*while( feedbackQ1.inicio != NULL ){
-        processo = feedbackQ1.inicio;
-
-
-        if(processo->Mbytes != 0){
-            aux = processo->Mbytes*2;
-            for(i =1;i<2;i++){
-                memoriaPrincipal -=processo->Mbytes;
-                processo->Mbytes -= quantum;
-            }
-        }
-        else{
-            aux1 = processo;
-            processo = processo->prox;
-            free(aux1);
-        }
-        memoriaPrincipal+=aux;
-        processo = processo->prox;
-        aux1 = retirarFila(&feedbackQ1);
-        inserirFila(&feedbackQ2,aux1);
-    }*/
-
-    
-
-   /* while( feedbackQ2.inicio != NULL ){ arrumar essa parte
-        processo = feedbackQ1.inicio;
-
-
-        if(processo->Mbytes != 0){
-            aux = processo->Mbytes*2;
-            for(i =1;i<2;i++){
-                memoriaPrincipal -=processo->Mbytes;
-                processo->Mbytes -= quantum;
-            }
-        }
-        else{
-            aux1 = processo;
-            processo = processo->prox;
-            free(aux1);
-        }
-        memoriaPrincipal+=aux;
-        processo = processo->prox;
-        aux1 = retirarFila(&feedbackQ2);
-        inserirFila(&feedbackQ2,aux1);
-    }*/
-
-    printf("%d\n", memoriaPrincipal);
 }
-
 
 int main(){
     fila queueEntradaProcessos;
