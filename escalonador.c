@@ -202,56 +202,20 @@ void politicafeedback(fila *feedbackQ0, hardware * sistema){
 
     int i =0;
 
-    while( feedbackQ0->inicio != NULL && feedbackQ1.inicio != NULL && feedbackQ2.inicio != NULL   ){
+    while( feedbackQ0->inicio != NULL || feedbackQ1.inicio != NULL || feedbackQ2.inicio != NULL ){
         if(feedbackQ0->inicio!= NULL ){
-            processo = feedbackQ0->inicio;
-
-            if(processo->Mbytes*2 <= sistema->memoriaPrincipal && processo->cds <= sistema->CD && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner ){
-                sistema->memoriaPrincipal -= processo->Mbytes;
-                sistema->memoriaPrincipal -= processo->Mbytes;
-            }
-            sistema = Sistema(); // reset nas variaves de sistema
-            if(processo->Mbytes != 0){
-                trocarElementoFila(feedbackQ0, &feedbackQ1);
-            }
-            else{
-                printf("processo de id: terminado\n", processo->id);
-                free(processo);  
-            } 
+            trocarElementoFila(feedbackQ0,&feedbackQ1);
+            printf("trocou da fila 0 para fila 1\n");
         }
 
         if(feedbackQ1.inicio!= NULL ){
-            processo = feedbackQ1.inicio;
-
-            if(processo->Mbytes*2 <= sistema->memoriaPrincipal && processo->cds <= sistema->CD && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner){
-                sistema->memoriaPrincipal -= processo->Mbytes;
-                sistema->memoriaPrincipal -= processo->Mbytes;
-              }
-             sistema = Sistema(); // reset nas variaves de sistema
-             if(processo->Mbytes != 0){
-                trocarElementoFila(feedbackQ0, &feedbackQ1);
-            }
-            else{
-                 printf("processo de id: terminado\n", processo->id);
-                 free(processo);  
-            }   
+            trocarElementoFila(&feedbackQ1,&feedbackQ2);
+            printf("trocou da fila 1 para fila 2\n");
         }
 
         if(feedbackQ2.inicio!= NULL ){
-            processo = feedbackQ1.inicio;
-
-            if(processo->Mbytes*2 <= sistema->memoriaPrincipal && processo->cds <= sistema->CD && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner){
-                sistema->memoriaPrincipal -= processo->Mbytes;
-                sistema->memoriaPrincipal -= processo->Mbytes;
-              }
-             sistema = Sistema(); // reset nas variaves de sistema
-             if(processo->Mbytes != 0){
-                trocarElementoFila(&feedbackQ2, &feedbackQ2);
-            }
-            else{
-                 printf("processo de id: terminado\n", processo->id);
-                 free(processo);  
-            }   
+            trocarElementoFila(&feedbackQ2,&feedbackQ2);
+            printf("trocou da fila 2 para fila 2\n");
         } 
     }
 }
