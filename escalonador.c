@@ -59,7 +59,7 @@ void politicafeedback(fila *feedbackQ0, hardware * sistema);
 
 void exibirFila(fila *fila);
 
-
+hardware * restaurarSistema();
 
 
 // fim das funções e suas explicações
@@ -136,8 +136,6 @@ void trocarElementoFila(fila* a1, fila *a2){
 
 void entradaDeProcesso(fila *queueEntradaProcessos ){
 
-
-
     FILE *processo;
     processo = fopen("lista-de-processos.txt", "r");
     
@@ -188,7 +186,11 @@ void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario){
    politicafeedback(ProcessosUsuario, sistema);
 }
 
-
+hardware * restaurarSistema(){
+    hardware * a1 = (hardware*)malloc(sizeof(hardware));
+    a1 = Sistema();
+    return a1;
+}
 
 void politicafeedback(fila *feedbackQ0, hardware * sistema){
     
@@ -199,24 +201,62 @@ void politicafeedback(fila *feedbackQ0, hardware * sistema){
     inicializarFila(&feedbackQ2);
 
     componentesProcessos * processo;
-
+    componentesProcessos * excluir;
     int i =0;
 
-    while( feedbackQ0->inicio != NULL || feedbackQ1.inicio != NULL || feedbackQ2.inicio != NULL ){
-        if(feedbackQ0->inicio!= NULL ){
-            trocarElementoFila(feedbackQ0,&feedbackQ1);
-            printf("trocou da fila 0 para fila 1\n");
+    while( feedbackQ0->inicio != NULL ){
+        processo = feedbackQ0->inicio;
+        if(processo->Mbytes <= sistema->memoriaPrincipal && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner && processo->cds <= sistema->CD){
+            processo->processor_time -= 2;
+            if(processo->processor_time <= 0){
+                printf("processo de id: %d foi encerrado\n",  feedbackQ0->inicio->id);
+                excluir = retirarFila(feedbackQ0);
+                free(excluir);
+            }
+            else{
+                printf("processo de id: %d foi da fila 0 para a fila 1\n",  feedbackQ0->inicio->id);
+                trocarElementoFila(feedbackQ0, &feedbackQ1); 
+            }  
         }
+    }
 
-        if(feedbackQ1.inicio!= NULL ){
-            trocarElementoFila(&feedbackQ1,&feedbackQ2);
-            printf("trocou da fila 1 para fila 2\n");
+    excluir = NULL;
+    processo = NULL;
+    while( feedbackQ1.inicio != NULL ){
+        processo = feedbackQ1.inicio;
+        if(processo->Mbytes <= sistema->memoriaPrincipal && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner && processo->cds <= sistema->CD){
+            processo->processor_time -= 2;
+
+            if(processo->processor_time <= 0){
+                printf("processo de id: %d foi encerrado\n",  feedbackQ1.inicio->id);
+                excluir = retirarFila(&feedbackQ1);
+                free(excluir);
+            }
+            else{
+                printf("processo de id: %d foi da fila 1 para a fila 2\n",  feedbackQ1.inicio->id);
+                trocarElementoFila(&feedbackQ1, &feedbackQ2);
+            }
         }
+    }
 
-        if(feedbackQ2.inicio!= NULL ){
-            trocarElementoFila(&feedbackQ2,&feedbackQ2);
-            printf("trocou da fila 2 para fila 2\n");
-        } 
+    excluir = NULL;
+    processo = NULL;
+    while( feedbackQ2.inicio != NULL ){
+        
+        processo = feedbackQ2.inicio;
+
+        if(processo->Mbytes <= sistema->memoriaPrincipal && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner && processo->cds <= sistema->CD){
+            processo->processor_time -=2;
+            if(processo->processor_time <= 0){
+                printf("processo de id: %d foi encerrado\n",  feedbackQ2.inicio->id);
+                excluir = retirarFila(&feedbackQ2);
+                free(excluir);
+            }
+            else{
+                printf("processo de id: %d foi da fila 2 para a fila 2\n",  feedbackQ2.inicio->id);
+                trocarElementoFila(feedbackQ0, &feedbackQ1);
+            }
+        }
     }
 }
 
