@@ -55,14 +55,18 @@ void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario);
 
 hardware * Sistema();
 
-void politicafeedback(fila *feedbackQ0, hardware * sistema);
+hardware * restaurarSistema();
+
+hardware * utilizacaoSistema( hardware * sistema, componentesProcessos * aux);
+
+void * politicaFirstComeFirstServed(fila *filaTempoReal, hardware * sistema);
+
+void politicaFeedback(fila *feedbackQ0, hardware * sistema);
 
 void exibirFila(fila *fila);
 
-hardware * restaurarSistema();
-
-
 // fim das funções e suas explicações
+
 
 hardware * Sistema(){
     hardware * a1 = (hardware*)malloc(sizeof(hardware));
@@ -76,28 +80,44 @@ hardware * Sistema(){
     return a1;
 }
 
+
+hardware * restaurarSistema(){
+    hardware * a1 = (hardware*)malloc(sizeof(hardware));
+    a1 = Sistema();
+    return a1;
+}
+
+hardware * utilizacaoSistema( hardware * sistema, componentesProcessos * aux){
+    sistema->impressora = sistema->impressora - aux->impressoras;
+    sistema->CD = sistema->CD - aux->cds;
+    sistema->modem = sistema->modem - aux->modems;
+    sistema->scanner = sistema->scanner - aux->scanners;
+    
+    if(aux->priority == 0){
+        int i;
+        for(i =0; i<=aux->processor_time; aux->processor_time-- ){
+            sistema->memoriaPrincipal = sistema->memoriaPrincipal - aux->Mbytes;
+        }
+    }
+
+    else{
+        int i;
+        for(i =0; i<=2 || aux->processor_time== 0; i++ ){
+            sistema->memoriaPrincipal = sistema->memoriaPrincipal - aux->Mbytes;
+            aux->processor_time--;
+        }
+        
+        
+    }
+
+    return sistema;
+}
+
+
 void inicializarFila(fila *fila){
     fila->fim = NULL;
     fila->inicio = NULL;
 }
-
-
-componentesProcessos *criarElementoFila( int id1, int arrival_time1, int priority1, int processor_time1, int Mbytes1, int impressoras1, int scanners1, int modems1, int cds1 ) {
-
-    componentesProcessos *novo = (componentesProcessos*) malloc(sizeof(componentesProcessos));
-    novo->id = id1;
-    novo->arrival_time = arrival_time1;
-    novo->priority = priority1;
-    novo->processor_time = processor_time1;
-    novo->Mbytes = Mbytes1;
-    novo->impressoras= impressoras1;
-    novo->scanners = scanners1;
-    novo->modems = modems1;
-    novo->cds = cds1;
-    novo->prox = NULL;
-    return novo;
-}
-
 
 void inserirFila(fila *fila, componentesProcessos *novo) {
     if(fila->fim == NULL) {
@@ -127,6 +147,24 @@ componentesProcessos * retirarFila(fila * q){
     return p;
 
 }
+
+
+componentesProcessos *criarElementoFila( int id1, int arrival_time1, int priority1, int processor_time1, int Mbytes1, int impressoras1, int scanners1, int modems1, int cds1 ) {
+
+    componentesProcessos *novo = (componentesProcessos*) malloc(sizeof(componentesProcessos));
+    novo->id = id1;
+    novo->arrival_time = arrival_time1;
+    novo->priority = priority1;
+    novo->processor_time = processor_time1;
+    novo->Mbytes = Mbytes1;
+    novo->impressoras= impressoras1;
+    novo->scanners = scanners1;
+    novo->modems = modems1;
+    novo->cds = cds1;
+    novo->prox = NULL;
+    return novo;
+}
+
 
 void trocarElementoFila(fila* a1, fila *a2){
   componentesProcessos * elemento = retirarFila(a1);
@@ -159,6 +197,7 @@ void entradaDeProcesso(fila *queueEntradaProcessos ){
 
 
 void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, fila *ProcessosUsuario){
+
     componentesProcessos *passador = (componentesProcessos*)malloc(sizeof(componentesProcessos));
     componentesProcessos *aux = (componentesProcessos*)malloc(sizeof(componentesProcessos));
     
@@ -176,23 +215,38 @@ void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, f
             inserirFila(ProcessosUsuario, aux);
         } 
     }
-    
     politicasProcessos(ProcessosTempoReal,ProcessosUsuario);
 }
 
 void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario){
     
    hardware *sistema = Sistema();
-   politicafeedback(ProcessosUsuario, sistema);
+   //politicaFirstComeFirstServed(ProcessosTempoReal, sistema);
+   politicaFeedback(ProcessosUsuario, sistema);
 }
 
-hardware * restaurarSistema(){
-    hardware * a1 = (hardware*)malloc(sizeof(hardware));
-    a1 = Sistema();
-    return a1;
+void * politicaFirstComeFirstServed(fila *filaTempoReal, hardware * sistema){
+    
+    componentesProcessos * processo;
+    componentesProcessos * aux;
+    aux = NULL;
+    processo = filaTempoReal->inicio;
+
+    while(processo!= NULL){
+        aux = processo;
+
+        if(aux->Mbytes <= sistema->memoriaPrincipal && aux->impressoras <= sistema->impressora && aux->modems <= sistema->modem && aux->scanners <= sistema->scanner && aux->cds <= sistema->CD){
+            printf("processo de id: %d foi para a memoria principal\n", aux->id);
+            utilizacaoSistema(sistema, aux);
+            printf("processo de id: %d foi encerrado\n", aux->id);
+            sistema = restaurarSistema(sistema);
+        }
+        processo = processo->prox;
+    }
 }
 
-void politicafeedback(fila *feedbackQ0, hardware * sistema){
+
+void politicaFeedback(fila *feedbackQ0, hardware * sistema){
     
     fila feedbackQ1;
     fila feedbackQ2;
@@ -202,12 +256,14 @@ void politicafeedback(fila *feedbackQ0, hardware * sistema){
 
     componentesProcessos * processo;
     componentesProcessos * excluir;
-    int i =0;
 
     while( feedbackQ0->inicio != NULL ){
+        
         processo = feedbackQ0->inicio;
         if(processo->Mbytes <= sistema->memoriaPrincipal && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner && processo->cds <= sistema->CD){
-            processo->processor_time -= 2;
+
+            
+            sistema = utilizacaoSistema(sistema, processo);
             if(processo->processor_time <= 0){
                 printf("processo de id: %d foi encerrado\n",  feedbackQ0->inicio->id);
                 excluir = retirarFila(feedbackQ0);
@@ -218,14 +274,18 @@ void politicafeedback(fila *feedbackQ0, hardware * sistema){
                 trocarElementoFila(feedbackQ0, &feedbackQ1); 
             }  
         }
+        sistema = restaurarSistema(sistema);
     }
 
     excluir = NULL;
     processo = NULL;
     while( feedbackQ1.inicio != NULL ){
+
         processo = feedbackQ1.inicio;
+
         if(processo->Mbytes <= sistema->memoriaPrincipal && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner && processo->cds <= sistema->CD){
-            processo->processor_time -= 2;
+
+            sistema = utilizacaoSistema(sistema, processo);
 
             if(processo->processor_time <= 0){
                 printf("processo de id: %d foi encerrado\n",  feedbackQ1.inicio->id);
@@ -237,16 +297,20 @@ void politicafeedback(fila *feedbackQ0, hardware * sistema){
                 trocarElementoFila(&feedbackQ1, &feedbackQ2);
             }
         }
+        sistema = restaurarSistema(sistema);
     }
 
     excluir = NULL;
     processo = NULL;
+
     while( feedbackQ2.inicio != NULL ){
         
         processo = feedbackQ2.inicio;
 
         if(processo->Mbytes <= sistema->memoriaPrincipal && processo->impressoras <= sistema->impressora && processo->modems <= sistema->modem && processo->scanners <= sistema->scanner && processo->cds <= sistema->CD){
-            processo->processor_time -=2;
+
+            sistema = utilizacaoSistema(sistema, processo);
+
             if(processo->processor_time <= 0){
                 printf("processo de id: %d foi encerrado\n",  feedbackQ2.inicio->id);
                 excluir = retirarFila(&feedbackQ2);
@@ -257,6 +321,7 @@ void politicafeedback(fila *feedbackQ0, hardware * sistema){
                 trocarElementoFila(feedbackQ0, &feedbackQ1);
             }
         }
+        sistema = restaurarSistema(sistema);
     }
 }
 
