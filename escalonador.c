@@ -49,7 +49,7 @@ void trocarElementoFila(fila* a1, fila *a2);
 
 void entradaDeProcesso();
 
-void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, fila *ProcessosUsuario);
+void separacaoProcessos(fila *queueEntradaProcessos);
 
 void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario);
 
@@ -172,50 +172,61 @@ void trocarElementoFila(fila* a1, fila *a2){
 }
 
 
-void entradaDeProcesso(fila *queueEntradaProcessos ){
+void entradaDeProcesso( ){
+    fila queueEntradaProcessos;
+    inicializarFila(&queueEntradaProcessos);
 
     FILE *processo;
     processo = fopen("lista-de-processos.txt", "r");
     
 
     if(processo == NULL )
-        printf("erro\n");
+        printf("erro no arquivo\n");
 
     else{
+        int i = 0 ;
         char residuos[7];
         componentesProcessos a1;
-        while(fscanf(processo, "%d %c  %d  %c %d %c %d %c %d %c %d %c %d %c %d",&a1.arrival_time, &residuos[0], &a1.priority, &residuos[1], &a1.processor_time, &residuos[2],&a1.Mbytes, &residuos[3], &a1.impressoras,  &residuos[4], &a1.scanners, &residuos[5], &a1.modems,  &residuos[6], &a1.cds)!=EOF){
 
+        while(fscanf(processo, "%d %c  %d  %c %d %c %d %c %d %c %d %c %d %c %d",&a1.arrival_time, &residuos[0], &a1.priority, &residuos[1], &a1.processor_time, &residuos[2],&a1.Mbytes, &residuos[3], &a1.impressoras,  &residuos[4], &a1.scanners, &residuos[5], &a1.modems,  &residuos[6], &a1.cds)!=EOF){
+            
             componentesProcessos *newProcesso;
             newProcesso = criarElementoFila(a, a1.arrival_time, a1.priority, a1.processor_time, a1.Mbytes, a1.impressoras, a1.scanners, a1.modems, a1.cds);
             a++;
-            inserirFila(queueEntradaProcessos, newProcesso );
-        }   
+            inserirFila(&queueEntradaProcessos, newProcesso );
+            i++;
+         }
+        separacaoProcessos(&queueEntradaProcessos);  
     }
-    fclose(processo);
+    
 }
 
 
-void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, fila *ProcessosUsuario){
+void separacaoProcessos(fila *queueEntradaProcessos){
+    fila  ProcessosTempoReal;
+    fila  ProcessosUsuario;
+    
+    inicializarFila(&ProcessosTempoReal);
+    inicializarFila(&ProcessosUsuario);
 
     componentesProcessos *passador = (componentesProcessos*)malloc(sizeof(componentesProcessos));
     componentesProcessos *aux = (componentesProcessos*)malloc(sizeof(componentesProcessos));
-    
     passador = queueEntradaProcessos->inicio;
+    
     while(passador){
         
         if(passador->priority == 0){
             passador = passador->prox;
             aux= retirarFila(queueEntradaProcessos);
-            inserirFila(ProcessosTempoReal, aux);
+            inserirFila(&ProcessosTempoReal, aux);
         }
         else{
             passador = passador->prox;
             aux= retirarFila(queueEntradaProcessos);
-            inserirFila(ProcessosUsuario, aux);
+            inserirFila(&ProcessosUsuario, aux);
         } 
     }
-    politicasProcessos(ProcessosTempoReal,ProcessosUsuario);
+    politicasProcessos(&ProcessosTempoReal,&ProcessosUsuario);
 }
 
 void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario){
@@ -326,17 +337,10 @@ void politicaFeedback(fila *feedbackQ0, hardware * sistema){
 }
 
 int main(){
-    fila queueEntradaProcessos;
-    inicializarFila(&queueEntradaProcessos);
-    entradaDeProcesso(&queueEntradaProcessos);
+    
+    entradaDeProcesso();
 
-    // filas com niveis de prioridade
-    fila ProcessosTempoReal;
-    fila ProcessosUsuario;
-    inicializarFila(&ProcessosTempoReal);
-    inicializarFila(&ProcessosUsuario);
 
-    separacaoProcessos(&queueEntradaProcessos,&ProcessosTempoReal,&ProcessosUsuario);
     return 0;
 }
 
