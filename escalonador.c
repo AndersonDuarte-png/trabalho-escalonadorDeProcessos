@@ -221,7 +221,7 @@ void separacaoProcessos(fila *queueEntradaProcessos, fila *ProcessosTempoReal, f
 void politicasProcessos(fila *ProcessosTempoReal, fila *ProcessosUsuario){
     
    hardware *sistema = Sistema();
-   //politicaFirstComeFirstServed(ProcessosTempoReal, sistema);
+   politicaFirstComeFirstServed(ProcessosTempoReal, sistema);
    politicaFeedback(ProcessosUsuario, sistema);
 }
 
